@@ -4,7 +4,7 @@ Small CLI for scheduling `continue` + Enter into an existing tmux session on the
 
 ## Why this approach
 
-The script uses `tmux send-keys`, so it does not attach to the session, steal focus, or block normal use of that tmux session. When the scheduled time arrives, it resolves the session's currently active pane and types into that pane.
+The script uses `tmux send-keys`, so it does not attach to the session, steal focus, or block normal use of that tmux session. When the scheduled time arrives, it resolves the session's currently active pane, types into that pane, waits one second, and then sends Enter to that same pane.
 
 ## Usage
 
@@ -39,4 +39,5 @@ Dry run:
 - `--at` is interpreted in the machine's local timezone.
 - `--delay` accepts raw seconds, `h:m`, or `h:m:s`.
 - `--text` defaults to `continue`, but it can be changed if needed.
+- The script always waits one second between typing the text and sending Enter.
 - Short options are available: `-s`, `-d`, `-a`, `-t`, and `-n`.
