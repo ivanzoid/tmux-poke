@@ -74,6 +74,7 @@ def parse_args() -> argparse.Namespace:
         description="Schedule typing 'continue' and Enter into an existing tmux session."
     )
     parser.add_argument(
+        "-s",
         "--session",
         required=True,
         help="tmux session id or name. Numeric ids can be passed as 160 or $160.",
@@ -81,21 +82,25 @@ def parse_args() -> argparse.Namespace:
 
     schedule_group = parser.add_mutually_exclusive_group(required=True)
     schedule_group.add_argument(
+        "-d",
         "--delay",
         type=float,
         help="Delay in seconds before sending input.",
     )
     schedule_group.add_argument(
+        "-a",
         "--at",
         help="Exact local time to send input, for example '2026-04-06 21:15' or '2026-04-06T21:15:30'.",
     )
 
     parser.add_argument(
+        "-t",
         "--text",
         default="continue",
         help="Text to send before Enter. Defaults to 'continue'.",
     )
     parser.add_argument(
+        "-n",
         "--dry-run",
         action="store_true",
         help="Show what would happen without sending anything.",
