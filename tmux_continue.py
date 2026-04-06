@@ -179,7 +179,8 @@ def main() -> None:
         time.sleep(delay_seconds)
 
     pane_id = get_active_pane_for_session(session_target)
-    run_tmux("send-keys", "-t", pane_id, send_text, "Enter")
+    run_tmux("send-keys", "-t", pane_id, "-l", send_text)
+    run_tmux("send-keys", "-t", pane_id, "C-m")
     print(f"sent {send_text!r} + Enter to {pane_id} in session {session_target} at {scheduled_label}")
 
 
