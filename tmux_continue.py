@@ -140,6 +140,8 @@ def main() -> None:
         )
         return
 
+    print(f"scheduled {args.text!r} + Enter for session {session_target} at {scheduled_label}", flush=True)
+
     if delay_seconds > 0:
         time.sleep(delay_seconds)
 
