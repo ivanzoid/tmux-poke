@@ -134,11 +134,6 @@ def parse_args() -> argparse.Namespace:
         help="Text to send before Enter. Defaults to 'continue'.",
     )
     parser.add_argument(
-        "-m",
-        "--extra-text",
-        help="Extra text to append after the main text, separated by a space.",
-    )
-    parser.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
@@ -166,7 +161,7 @@ def main() -> None:
     args = parse_args()
     session_target = resolve_session_target(args.session)
     delay_seconds = seconds_until(args)
-    send_text = args.text if not args.extra_text else f"{args.text} {args.extra_text}"
+    send_text = args.text
 
     scheduled_for = datetime.now().timestamp() + delay_seconds
     scheduled_label = datetime.fromtimestamp(scheduled_for).isoformat(sep=" ", timespec="seconds")
