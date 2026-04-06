@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -69,6 +70,39 @@ def parse_local_datetime(value: str) -> datetime:
     return scheduled_at
 
 
+def parse_delay(value: str) -> float:
+    normalized = value.strip()
+    if not normalized:
+        fail("delay value cannot be empty")
+
+    if ":" not in normalized:
+        try:
+            delay_seconds = float(normalized)
+        except ValueError:
+            fail("invalid --delay value. Use seconds or h:m or h:m:s")
+        if delay_seconds < 0:
+            fail("--delay must be zero or greater")
+        return delay_seconds
+
+    parts = normalized.split(":")
+    if len(parts) not in (2, 3):
+        fail("invalid --delay value. Use h:m or h:m:s")
+
+    if not all(re.fullmatch(r"\d+", part) for part in parts):
+        fail("invalid --delay value. Hours, minutes, and seconds must be integers")
+
+    hours = int(parts[0])
+    minutes = int(parts[1])
+    seconds = int(parts[2]) if len(parts) == 3 else 0
+
+    if minutes >= 60:
+        fail("invalid --delay value. Minutes must be less than 60")
+    if seconds >= 60:
+        fail("invalid --delay value. Seconds must be less than 60")
+
+    return float(hours * 3600 + minutes * 60 + seconds)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Schedule typing 'continue' and Enter into an existing tmux session."
@@ -84,8 +118,8 @@ def parse_args() -> argparse.Namespace:
     schedule_group.add_argument(
         "-d",
         "--delay",
-        type=float,
-        help="Delay in seconds before sending input.",
+        type=parse_delay,
+        help="Delay before sending input. Accepts seconds or h:m or h:m:s.",
     )
     schedule_group.add_argument(
         "-a",
@@ -110,8 +144,6 @@ def parse_args() -> argparse.Namespace:
 
 def seconds_until(schedule_args: argparse.Namespace) -> float:
     if schedule_args.delay is not None:
-        if schedule_args.delay < 0:
-            fail("--delay must be zero or greater")
         return schedule_args.delay
 
     scheduled_at = parse_local_datetime(schedule_args.at)

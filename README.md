@@ -13,6 +13,8 @@ Delay-based scheduling:
 ```bash
 ./tmux_continue.py --session '$160' --delay 30
 ./tmux_continue.py -s '$160' -d 30
+./tmux_continue.py -s '$160' -d 1:15
+./tmux_continue.py -s '$160' -d 1:15:30
 ```
 
 Absolute local time scheduling:
@@ -35,5 +37,6 @@ Dry run:
 - `--session` accepts either a tmux session name or a session id.
 - Numeric ids can be passed as `160`; the script also resolves them as tmux ids like `$160`.
 - `--at` is interpreted in the machine's local timezone.
+- `--delay` accepts raw seconds, `h:m`, or `h:m:s`.
 - `--text` defaults to `continue`, but it can be changed if needed.
 - Short options are available: `-s`, `-d`, `-a`, `-t`, and `-n`.
