@@ -134,6 +134,11 @@ def parse_args() -> argparse.Namespace:
         help="Text to send before Enter. Defaults to 'continue'.",
     )
     parser.add_argument(
+        "-m",
+        "--extra-text",
+        help="Extra text to append after the main text, separated by a space.",
+    )
+    parser.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
@@ -161,6 +166,7 @@ def main() -> None:
     args = parse_args()
     session_target = resolve_session_target(args.session)
     delay_seconds = seconds_until(args)
+    send_text = args.text if not args.extra_text else f"{args.text} {args.extra_text}"
 
     scheduled_for = datetime.now().timestamp() + delay_seconds
     scheduled_label = datetime.fromtimestamp(scheduled_for).isoformat(sep=" ", timespec="seconds")
@@ -168,18 +174,18 @@ def main() -> None:
     if args.dry_run:
         pane_id = get_active_pane_for_session(session_target)
         print(
-            f"dry-run: would send {args.text!r} + Enter to {pane_id} in session {session_target} at {scheduled_label}"
+            f"dry-run: would send {send_text!r} + Enter to {pane_id} in session {session_target} at {scheduled_label}"
         )
         return
 
-    print(f"scheduled {args.text!r} + Enter for session {session_target} at {scheduled_label}", flush=True)
+    print(f"scheduled {send_text!r} + Enter for session {session_target} at {scheduled_label}", flush=True)
 
     if delay_seconds > 0:
         time.sleep(delay_seconds)
 
     pane_id = get_active_pane_for_session(session_target)
-    run_tmux("send-keys", "-t", pane_id, args.text, "Enter")
-    print(f"sent {args.text!r} + Enter to {pane_id} in session {session_target} at {scheduled_label}")
+    run_tmux("send-keys", "-t", pane_id, send_text, "Enter")
+    print(f"sent {send_text!r} + Enter to {pane_id} in session {session_target} at {scheduled_label}")
 
 
 if __name__ == "__main__":

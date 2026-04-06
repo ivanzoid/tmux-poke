@@ -32,6 +32,13 @@ Dry run:
 ./tmux_continue.py -s '$160' -d 30 -n
 ```
 
+Append custom text after `continue`:
+
+```bash
+./tmux_continue.py -s '$160' -d 30 -m 'please resume from the last task'
+./tmux_continue.py -s '$160' -a '2026-04-06T21:15:30' -m 'summarize the current blocker'
+```
+
 ## Notes
 
 - `--session` accepts either a tmux session name or a session id.
@@ -39,4 +46,5 @@ Dry run:
 - `--at` is interpreted in the machine's local timezone.
 - `--delay` accepts raw seconds, `h:m`, or `h:m:s`.
 - `--text` defaults to `continue`, but it can be changed if needed.
-- Short options are available: `-s`, `-d`, `-a`, `-t`, and `-n`.
+- `--extra-text` appends text after the main command with a single space.
+- Short options are available: `-s`, `-d`, `-a`, `-t`, `-m`, and `-n`.
