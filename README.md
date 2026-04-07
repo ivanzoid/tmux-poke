@@ -1,35 +1,37 @@
-# tmux-continue
+# tmux-poke
 
-Small CLI for scheduling `continue` + Enter into an existing tmux session on the local machine.
+Small CLI for scheduling text + Enter into an existing tmux session on the local machine.
 
 ## Why this approach
 
 The script uses `tmux send-keys`, so it does not attach to the session, steal focus, or block normal use of that tmux session. When the scheduled time arrives, it resolves the session's currently active pane, types into that pane, waits one second, and then sends Enter to that same pane.
+
+This is useful when you want to continue Claude Code, Codex, or a similar terminal app later after a usage limit resets. Schedule a `continue` poke, leave the session alone, and let it resume when the time arrives.
 
 ## Usage
 
 Delay-based scheduling:
 
 ```bash
-./tmux_continue.py --session '$160' --delay 30
-./tmux_continue.py -s '$160' -d 30
-./tmux_continue.py -s '$160' -d 1:15
-./tmux_continue.py -s '$160' -d 1:15:30
+./tmux_poke.py --session '$160' --delay 30
+./tmux_poke.py -s '$160' -d 30
+./tmux_poke.py -s '$160' -d 1:15
+./tmux_poke.py -s '$160' -d 1:15:30
 ```
 
 Absolute local time scheduling:
 
 ```bash
-./tmux_continue.py --session '$160' --at '2026-04-06 21:15'
-./tmux_continue.py --session 160 --at '2026-04-06T21:15:30'
-./tmux_continue.py -s 160 -a '2026-04-06T21:15:30'
+./tmux_poke.py --session '$160' --at '2026-04-06 21:15'
+./tmux_poke.py --session 160 --at '2026-04-06T21:15:30'
+./tmux_poke.py -s 160 -a '2026-04-06T21:15:30'
 ```
 
 Dry run:
 
 ```bash
-./tmux_continue.py --session '$160' --delay 30 --dry-run
-./tmux_continue.py -s '$160' -d 30 -n
+./tmux_poke.py --session '$160' --delay 30 --dry-run
+./tmux_poke.py -s '$160' -d 30 -n
 ```
 
 ## Notes

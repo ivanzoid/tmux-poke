@@ -107,7 +107,7 @@ def parse_delay(value: str) -> float:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Schedule typing 'continue' and Enter into an existing tmux session."
+        description="Schedule typing text and Enter into an existing tmux session."
     )
     parser.add_argument(
         "-s",
