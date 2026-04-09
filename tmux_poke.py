@@ -13,7 +13,7 @@ ENTER_DELAY_SECONDS = 1.0
 
 
 def fail(message: str) -> None:
-    print(f"error: {message}", file=sys.stderr)
+    print(f"Error: {message}", file=sys.stderr)
     raise SystemExit(1)
 
 
@@ -136,6 +136,12 @@ def parse_args() -> argparse.Namespace:
         help="Text to send before Enter. Defaults to 'continue'.",
     )
     parser.add_argument(
+        "-E",
+        "--enter-before",
+        action="store_true",
+        help="Send Enter immediately before typing the text.",
+    )
+    parser.add_argument(
         "-n",
         "--dry-run",
         action="store_true",
@@ -164,9 +170,15 @@ def main() -> None:
     session_target = resolve_session_target(args.session)
     delay_seconds = seconds_until(args)
     send_text = args.text
+    enter_before = args.enter_before
 
     now = datetime.now().timestamp()
     text_scheduled_for = now + delay_seconds
+    if enter_before:
+        initial_enter_scheduled_for = text_scheduled_for
+        text_scheduled_for += ENTER_DELAY_SECONDS
+    else:
+        initial_enter_scheduled_for = None
     enter_scheduled_for = text_scheduled_for + ENTER_DELAY_SECONDS
     text_scheduled_label = datetime.fromtimestamp(text_scheduled_for).isoformat(
         sep=" ", timespec="seconds"
@@ -174,28 +186,61 @@ def main() -> None:
     enter_scheduled_label = datetime.fromtimestamp(enter_scheduled_for).isoformat(
         sep=" ", timespec="seconds"
     )
+    initial_enter_scheduled_label = (
+        datetime.fromtimestamp(initial_enter_scheduled_for).isoformat(
+            sep=" ", timespec="seconds"
+        )
+        if initial_enter_scheduled_for is not None
+        else None
+    )
 
     if args.dry_run:
         pane_id = get_active_pane_for_session(session_target)
-        print(
-            f"dry-run: would type {send_text!r} to {pane_id} in session {session_target} at "
-            f"{text_scheduled_label}; Enter at {enter_scheduled_label}"
-        )
+        if enter_before:
+            print(
+                f"Dry-run: would send Enter to {pane_id} in session "
+                f"{session_target} at {initial_enter_scheduled_label}; type "
+                f"{send_text!r} at {text_scheduled_label}; send Enter at "
+                f"{enter_scheduled_label}"
+            )
+        else:
+            print(
+                f"Dry-run: would type {send_text!r} to {pane_id} in session "
+                f"{session_target} at {text_scheduled_label}; send Enter at "
+                f"{enter_scheduled_label}"
+            )
         return
 
-    print(
-        f"scheduled {send_text!r} for session {session_target} at {text_scheduled_label}; "
-        f"Enter at {enter_scheduled_label}",
-        flush=True,
-    )
+    if enter_before:
+        print(
+            f"Scheduled Enter for session {session_target} at "
+            f"{initial_enter_scheduled_label}; text {send_text!r} at "
+            f"{text_scheduled_label}; Enter at {enter_scheduled_label}",
+            flush=True,
+        )
+    else:
+        print(
+            f"Scheduled {send_text!r} for session {session_target} at "
+            f"{text_scheduled_label}; Enter at {enter_scheduled_label}",
+            flush=True,
+        )
 
     if delay_seconds > 0:
         time.sleep(delay_seconds)
 
     pane_id = get_active_pane_for_session(session_target)
+    if enter_before:
+        run_tmux("send-keys", "-t", pane_id, "C-m")
+        print(
+            f"Sent Enter to {pane_id} in session {session_target} at "
+            f"{datetime.now().isoformat(sep=' ', timespec='seconds')}",
+            flush=True,
+        )
+        time.sleep(ENTER_DELAY_SECONDS)
+
     run_tmux("send-keys", "-t", pane_id, "-l", send_text)
     print(
-        f"typed {send_text!r} to {pane_id} in session {session_target} at "
+        f"Typed {send_text!r} to {pane_id} in session {session_target} at "
         f"{datetime.now().isoformat(sep=' ', timespec='seconds')}; Enter scheduled at "
         f"{enter_scheduled_label}",
         flush=True,
@@ -205,7 +250,7 @@ def main() -> None:
 
     run_tmux("send-keys", "-t", pane_id, "C-m")
     print(
-        f"sent Enter to {pane_id} in session {session_target} at "
+        f"Sent Enter to {pane_id} in session {session_target} at "
         f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
     )
 
