@@ -57,13 +57,6 @@ tmux-poke --session '$160' --at '2026-04-06 21:15'
 tmux-poke --session 160 --at '2026-04-06T21:15:30'
 ```
 
-Direct script usage:
-
-```bash
-# Run the repository script directly instead of the pipx-installed command
-./tmux_poke.py --session '$160' --delay 30
-```
-
 ## Notes
 
 - `--session` accepts either a tmux session name or a session id.
