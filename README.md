@@ -42,9 +42,11 @@ tmux-poke -s '$160' -d 1:15:30
 Absolute local time scheduling:
 
 ```bash
+tmux-poke --session '$160' --at '21:15'
 tmux-poke --session '$160' --at '2026-04-06 21:15'
 tmux-poke --session 160 --at '2026-04-06T21:15:30'
 tmux-poke -s 160 -a '2026-04-06T21:15:30'
+./tmux_poke.py --session '$160' --at '21:15'
 ./tmux_poke.py --session '$160' --at '2026-04-06 21:15'
 ./tmux_poke.py --session 160 --at '2026-04-06T21:15:30'
 ./tmux_poke.py -s 160 -a '2026-04-06T21:15:30'
@@ -73,8 +75,10 @@ tmux-poke -s '$160' -d 30 -E -t continue
 - `--session` accepts either a tmux session name or a session id.
 - Numeric ids can be passed as `160`; the script also resolves them as tmux ids like `$160`.
 - `--at` is interpreted in the machine's local timezone.
+- `--at HH:MM` schedules the next occurrence of that local time: later today if it is still ahead, otherwise tomorrow.
 - `--delay` accepts raw seconds, `h:m`, or `h:m:s`.
 - `--text` defaults to `continue`, but it can be changed if needed.
 - `--enter-before` sends Enter before typing the text, so the default sequence becomes Enter, wait one second, `continue`, wait one second, Enter.
 - The script always waits one second between each send step.
-- Short options are available: `-s`, `-d`, `-a`, `-t`, `-E`, and `-n`.
+- `--version` shows the CLI version.
+- Short options are available: `-s`, `-d`, `-a`, `-t`, `-E`, `-n`, and `-v`.

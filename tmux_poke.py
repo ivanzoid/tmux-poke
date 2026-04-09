@@ -7,8 +7,9 @@ import shutil
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
+VERSION = "0.1.2"
 ENTER_DELAY_SECONDS = 1.0
 
 
@@ -57,14 +58,31 @@ def get_active_pane_for_session(session_target: str) -> str:
     return pane_id
 
 
-def parse_local_datetime(value: str) -> datetime:
+def parse_local_datetime(value: str, reference_now: datetime) -> datetime:
     normalized = value.strip().replace("T", " ")
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})", normalized)
+    if match:
+        hours = int(match.group(1))
+        minutes = int(match.group(2))
+        if hours >= 24:
+            fail("invalid --at value. Hours must be less than 24")
+
+        scheduled_at = reference_now.replace(
+            hour=hours,
+            minute=minutes,
+            second=0,
+            microsecond=0,
+        )
+        if scheduled_at <= reference_now:
+            scheduled_at += timedelta(days=1)
+        return scheduled_at
+
     try:
         scheduled_at = datetime.fromisoformat(normalized)
-    except ValueError as exc:
+    except ValueError:
         fail(
-            "invalid --at value. Use local time in ISO-like format, for example "
-            "'2026-04-06 21:15' or '2026-04-06T21:15:30'"
+            "invalid --at value. Use local time as 'HH:MM', "
+            "'2026-04-06 21:15', or '2026-04-06T21:15:30'"
         )
 
     if scheduled_at.tzinfo is not None:
@@ -110,6 +128,12 @@ def parse_args() -> argparse.Namespace:
         description="Schedule typing text and Enter into an existing tmux session."
     )
     parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"%(prog)s {VERSION}",
+    )
+    parser.add_argument(
         "-s",
         "--session",
         required=True,
@@ -126,7 +150,10 @@ def parse_args() -> argparse.Namespace:
     schedule_group.add_argument(
         "-a",
         "--at",
-        help="Exact local time to send input, for example '2026-04-06 21:15' or '2026-04-06T21:15:30'.",
+        help=(
+            "Exact local time to send input, for example '21:15', "
+            "'2026-04-06 21:15', or '2026-04-06T21:15:30'."
+        ),
     )
 
     parser.add_argument(
@@ -154,11 +181,11 @@ def seconds_until(schedule_args: argparse.Namespace) -> float:
     if schedule_args.delay is not None:
         return schedule_args.delay
 
-    scheduled_at = parse_local_datetime(schedule_args.at)
     now = datetime.now()
+    scheduled_at = parse_local_datetime(schedule_args.at, now)
     delay = (scheduled_at - now).total_seconds()
-    if delay < 0:
-        fail(f"--at time is in the past: {scheduled_at.isoformat(sep=' ')}")
+    if delay <= 0:
+        fail(f"--at time is not in the future: {scheduled_at.isoformat(sep=' ')}")
     return delay
 
 
