@@ -9,7 +9,7 @@ Small CLI for scheduling text + Enter into an existing tmux session on the local
 pipx install 'git+https://github.com/ivanzoid/tmux-poke.git'
 ```
 
-After installation, use the `tmux-poke` command. The repository also keeps the executable `./tmux_poke.py` script for local use.
+After installation, use the `tmux-poke` command.
 
 ## Why this approach
 
@@ -22,29 +22,29 @@ This is useful when you want to continue Claude Code, Codex, or a similar termin
 Core arguments:
 
 ```bash
-# `--session` / `-s`: target tmux session by id or name
+# --session / -s: target tmux session by id or name
 tmux-poke --session '$160' --delay 30
 
-# `--delay` / `-d`: schedule by delay in seconds, h:m, or h:m:s
+# --delay / -d: schedule by delay in seconds, h:m, or h:m:s
 tmux-poke --session '$160' --delay 1:15:30
 
-# `--at` / `-a`: schedule for a local time
+# --at / -a: schedule for a local time
 tmux-poke --session '$160' --at '21:15'
 
-# `--text` / `-t`: change the text sent before Enter
+# --text / -t: change the text sent before Enter
 tmux-poke --session '$160' --delay 30 --text 'status'
 
-# `--enter-before` / `-E`: send Enter, wait, then type the text
+# --enter-before / -E: send Enter, wait, then type the text
 tmux-poke --session '$160' --delay 30 --enter-before
 
-# `--dry-run` / `-n`: preview the schedule without touching tmux
+# --dry-run / -n: preview the schedule without touching tmux
 tmux-poke --session '$160' --delay 30 --dry-run
 
-# `--version` / `-v`: print the installed CLI version
+# --version / -v: print the installed CLI version
 tmux-poke --version
 ```
 
-Useful `--at` forms:
+Useful --at forms:
 
 ```bash
 # Next occurrence of a local clock time, today or tomorrow
