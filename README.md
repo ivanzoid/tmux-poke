@@ -4,15 +4,8 @@ Small CLI for scheduling text + Enter into an existing tmux session on the local
 
 ## Installation
 
-Install from the current checkout:
-
 ```bash
-pipx install .
-```
-
-Install directly from GitHub:
-
-```bash
+# Install from GitHub with pipx
 pipx install 'git+https://github.com/ivanzoid/tmux-poke.git'
 ```
 
@@ -26,48 +19,49 @@ This is useful when you want to continue Claude Code, Codex, or a similar termin
 
 ## Usage
 
-Delay-based scheduling:
+Core arguments:
 
 ```bash
+# `--session` / `-s`: target tmux session by id or name
 tmux-poke --session '$160' --delay 30
-tmux-poke -s '$160' -d 30
-tmux-poke -s '$160' -d 1:15
-tmux-poke -s '$160' -d 1:15:30
-./tmux_poke.py --session '$160' --delay 30
-./tmux_poke.py -s '$160' -d 30
-./tmux_poke.py -s '$160' -d 1:15
-./tmux_poke.py -s '$160' -d 1:15:30
-```
 
-Absolute local time scheduling:
+# `--delay` / `-d`: schedule by delay in seconds, h:m, or h:m:s
+tmux-poke --session '$160' --delay 1:15:30
 
-```bash
+# `--at` / `-a`: schedule for a local time
 tmux-poke --session '$160' --at '21:15'
-tmux-poke --session '$160' --at '2026-04-06 21:15'
-tmux-poke --session 160 --at '2026-04-06T21:15:30'
-tmux-poke -s 160 -a '2026-04-06T21:15:30'
-./tmux_poke.py --session '$160' --at '21:15'
-./tmux_poke.py --session '$160' --at '2026-04-06 21:15'
-./tmux_poke.py --session 160 --at '2026-04-06T21:15:30'
-./tmux_poke.py -s 160 -a '2026-04-06T21:15:30'
-```
 
-Dry run:
+# `--text` / `-t`: change the text sent before Enter
+tmux-poke --session '$160' --delay 30 --text 'status'
 
-```bash
+# `--enter-before` / `-E`: send Enter, wait, then type the text
+tmux-poke --session '$160' --delay 30 --enter-before
+
+# `--dry-run` / `-n`: preview the schedule without touching tmux
 tmux-poke --session '$160' --delay 30 --dry-run
-tmux-poke -s '$160' -d 30 -n
-./tmux_poke.py --session '$160' --delay 30 --dry-run
-./tmux_poke.py -s '$160' -d 30 -n
+
+# `--version` / `-v`: print the installed CLI version
+tmux-poke --version
 ```
 
-Send Enter before the text:
+Useful `--at` forms:
 
 ```bash
-tmux-poke -s '$160' -d 30 --enter-before
-tmux-poke -s '$160' -d 30 -E -t continue
-./tmux_poke.py -s '$160' -d 30 --enter-before
-./tmux_poke.py -s '$160' -d 30 -E -t continue
+# Next occurrence of a local clock time, today or tomorrow
+tmux-poke --session '$160' --at '21:15'
+
+# Specific local date and minute
+tmux-poke --session '$160' --at '2026-04-06 21:15'
+
+# Specific local date and second
+tmux-poke --session 160 --at '2026-04-06T21:15:30'
+```
+
+Direct script usage:
+
+```bash
+# Run the repository script directly instead of the pipx-installed command
+./tmux_poke.py --session '$160' --delay 30
 ```
 
 ## Notes
