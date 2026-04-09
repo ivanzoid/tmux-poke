@@ -18,6 +18,18 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def format_timestamp(moment: datetime, reference_now: datetime) -> str:
+    if moment.second == 0 and moment.microsecond == 0:
+        time_format = "%H:%M"
+    else:
+        time_format = "%H:%M:%S"
+
+    if moment.date() == reference_now.date():
+        return moment.strftime(time_format)
+
+    return moment.strftime(f"%Y-%m-%d {time_format}")
+
+
 def run_tmux(*args: str) -> str:
     try:
         completed = subprocess.run(
@@ -27,7 +39,7 @@ def run_tmux(*args: str) -> str:
             text=True,
         )
     except FileNotFoundError:
-        fail("tmux is not installed or not in PATH")
+        fail("Tmux is not installed or not in PATH")
     except subprocess.CalledProcessError as exc:
         stderr = exc.stderr.strip() or exc.stdout.strip() or "tmux command failed"
         fail(stderr)
@@ -48,13 +60,13 @@ def resolve_session_target(target: str) -> str:
         if result.returncode == 0:
             return candidate
 
-    fail(f"tmux session not found: {target}")
+    fail(f"Tmux session not found: {target}")
 
 
 def get_active_pane_for_session(session_target: str) -> str:
     pane_id = run_tmux("display-message", "-p", "-t", session_target, "#{pane_id}")
     if not pane_id.startswith("%"):
-        fail(f"could not resolve an active pane for session {session_target}")
+        fail(f"Could not resolve an active pane for session {session_target}")
     return pane_id
 
 
@@ -65,7 +77,7 @@ def parse_local_datetime(value: str, reference_now: datetime) -> datetime:
         hours = int(match.group(1))
         minutes = int(match.group(2))
         if hours >= 24:
-            fail("invalid --at value. Hours must be less than 24")
+            fail("Invalid --at value. Hours must be less than 24")
 
         scheduled_at = reference_now.replace(
             hour=hours,
@@ -81,7 +93,7 @@ def parse_local_datetime(value: str, reference_now: datetime) -> datetime:
         scheduled_at = datetime.fromisoformat(normalized)
     except ValueError:
         fail(
-            "invalid --at value. Use local time as 'HH:MM', "
+            "Invalid --at value. Use local time as 'HH:MM', "
             "'2026-04-06 21:15', or '2026-04-06T21:15:30'"
         )
 
@@ -93,32 +105,32 @@ def parse_local_datetime(value: str, reference_now: datetime) -> datetime:
 def parse_delay(value: str) -> float:
     normalized = value.strip()
     if not normalized:
-        fail("delay value cannot be empty")
+        fail("Delay value cannot be empty")
 
     if ":" not in normalized:
         try:
             delay_seconds = float(normalized)
         except ValueError:
-            fail("invalid --delay value. Use seconds or h:m or h:m:s")
+            fail("Invalid --delay value. Use seconds or h:m or h:m:s")
         if delay_seconds < 0:
-            fail("--delay must be zero or greater")
+            fail("Delay must be zero or greater")
         return delay_seconds
 
     parts = normalized.split(":")
     if len(parts) not in (2, 3):
-        fail("invalid --delay value. Use h:m or h:m:s")
+        fail("Invalid --delay value. Use h:m or h:m:s")
 
     if not all(re.fullmatch(r"\d+", part) for part in parts):
-        fail("invalid --delay value. Hours, minutes, and seconds must be integers")
+        fail("Invalid --delay value. Hours, minutes, and seconds must be integers")
 
     hours = int(parts[0])
     minutes = int(parts[1])
     seconds = int(parts[2]) if len(parts) == 3 else 0
 
     if minutes >= 60:
-        fail("invalid --delay value. Minutes must be less than 60")
+        fail("Invalid --delay value. Minutes must be less than 60")
     if seconds >= 60:
-        fail("invalid --delay value. Seconds must be less than 60")
+        fail("Invalid --delay value. Seconds must be less than 60")
 
     return float(hours * 3600 + minutes * 60 + seconds)
 
@@ -166,7 +178,7 @@ def parse_args() -> argparse.Namespace:
         "-E",
         "--enter-before",
         action="store_true",
-        help="Send Enter immediately before typing the text.",
+        help="Send Enter before typing the text.",
     )
     parser.add_argument(
         "-n",
@@ -185,13 +197,13 @@ def seconds_until(schedule_args: argparse.Namespace) -> float:
     scheduled_at = parse_local_datetime(schedule_args.at, now)
     delay = (scheduled_at - now).total_seconds()
     if delay <= 0:
-        fail(f"--at time is not in the future: {scheduled_at.isoformat(sep=' ')}")
+        fail(f"At time is not in the future: {scheduled_at.isoformat(sep=' ')}")
     return delay
 
 
 def main() -> None:
     if shutil.which("tmux") is None:
-        fail("tmux is not installed or not in PATH")
+        fail("Tmux is not installed or not in PATH")
 
     args = parse_args()
     session_target = resolve_session_target(args.session)
@@ -199,23 +211,28 @@ def main() -> None:
     send_text = args.text
     enter_before = args.enter_before
 
-    now = datetime.now().timestamp()
-    text_scheduled_for = now + delay_seconds
+    schedule_now = datetime.now()
+    text_scheduled_for = schedule_now.timestamp() + delay_seconds
     if enter_before:
         initial_enter_scheduled_for = text_scheduled_for
         text_scheduled_for += ENTER_DELAY_SECONDS
     else:
         initial_enter_scheduled_for = None
     enter_scheduled_for = text_scheduled_for + ENTER_DELAY_SECONDS
-    text_scheduled_label = datetime.fromtimestamp(text_scheduled_for).isoformat(
-        sep=" ", timespec="seconds"
+    text_scheduled_dt = datetime.fromtimestamp(text_scheduled_for)
+    enter_scheduled_dt = datetime.fromtimestamp(enter_scheduled_for)
+    text_scheduled_label = format_timestamp(
+        text_scheduled_dt,
+        schedule_now,
     )
-    enter_scheduled_label = datetime.fromtimestamp(enter_scheduled_for).isoformat(
-        sep=" ", timespec="seconds"
+    enter_scheduled_label = format_timestamp(
+        enter_scheduled_dt,
+        schedule_now,
     )
     initial_enter_scheduled_label = (
-        datetime.fromtimestamp(initial_enter_scheduled_for).isoformat(
-            sep=" ", timespec="seconds"
+        format_timestamp(
+            datetime.fromtimestamp(initial_enter_scheduled_for),
+            schedule_now,
         )
         if initial_enter_scheduled_for is not None
         else None
@@ -258,17 +275,19 @@ def main() -> None:
     pane_id = get_active_pane_for_session(session_target)
     if enter_before:
         run_tmux("send-keys", "-t", pane_id, "C-m")
+        sent_enter_at = datetime.now()
         print(
             f"Sent Enter to {pane_id} in session {session_target} at "
-            f"{datetime.now().isoformat(sep=' ', timespec='seconds')}",
+            f"{format_timestamp(sent_enter_at, sent_enter_at)}",
             flush=True,
         )
         time.sleep(ENTER_DELAY_SECONDS)
 
     run_tmux("send-keys", "-t", pane_id, "-l", send_text)
+    typed_at = datetime.now()
     print(
         f"Typed {send_text!r} to {pane_id} in session {session_target} at "
-        f"{datetime.now().isoformat(sep=' ', timespec='seconds')}; Enter scheduled at "
+        f"{format_timestamp(typed_at, typed_at)}; Enter scheduled at "
         f"{enter_scheduled_label}",
         flush=True,
     )
@@ -276,9 +295,10 @@ def main() -> None:
     time.sleep(ENTER_DELAY_SECONDS)
 
     run_tmux("send-keys", "-t", pane_id, "C-m")
+    final_enter_at = datetime.now()
     print(
         f"Sent Enter to {pane_id} in session {session_target} at "
-        f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+        f"{format_timestamp(final_enter_at, final_enter_at)}"
     )
 
 
